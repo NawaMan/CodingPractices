@@ -1,0 +1,30 @@
+apply plugin: 'java'
+apply plugin: 'maven'
+apply plugin: 'eclipse'
+
+version = '1.0'
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'Gradle Jar File Example',  
+            'Implementation-Version': version,
+            'Main-Class': 'f2048.F2048'
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url 'https://raw.githubusercontent.com/nawaman/nawaman-maven-repository/master/' }
+}
+
+dependencies {
+    compile 'org.slf4j:slf4j-api:1.7.21'
+    
+    compile 'functionalj:functionalj-all:0.1.65.0'
+    
+    testCompile 'junit:junit:4.12'
+}
