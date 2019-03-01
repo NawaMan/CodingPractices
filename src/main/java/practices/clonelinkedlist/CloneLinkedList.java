@@ -6,18 +6,19 @@ import java.util.function.Function;
 // https://www.geeksforgeeks.org/a-linked-list-with-next-and-arbit-pointer/
 public class CloneLinkedList {
     
-    static class Link {
-        static final AtomicInteger idCounter = new AtomicInteger();
+    static class Node {
+        // The ID is added to show i
+        static final AtomicInteger idCounter = new AtomicInteger(1);
+        final int                  id        = idCounter.getAndIncrement();
         
-        final int    id = idCounter.getAndIncrement();
         final String value;
         
-        Link next   = null;
-        Link random = null;
-        public Link(String value) {
+        Node next   = null;
+        Node random = null;
+        public Node(String value) {
             this(value, null);
         }
-        public Link(String value, Link next) {
+        public Node(String value, Node next) {
             this.value  = value;
             this.next   = next;
         }
@@ -27,83 +28,84 @@ public class CloneLinkedList {
             String randomValue = (random != null) ? "#" + random.id + ":" + random.value : null;
             return id + "=" + value + ":(" + nextValue + "," + randomValue + ")" + ((next != null) ? " -> " + next : "");
         }
-        public void traverse(Function<Link, Link> action) {
-            Link next = action.apply(this);
+        public void traverse(Function<Node, Node> action) {
+            Node next = action.apply(this);
             if (next  != null)
                 next.traverse(action);
         }
     }
     
-    private static Link insertClone(Link orgLink) {
-        if (orgLink == null)
+    private static Node insertClone(Node orgNode) {
+        if (orgNode == null)
             return null;
         
-        Link nextLink = orgLink.next;
-        Link newLink  = new Link(orgLink.value, orgLink.next);
-        orgLink.next  = newLink;
+        Node nextNode = orgNode.next;
+        Node newNode  = new Node(orgNode.value, orgNode.next);
+        orgNode.next  = newNode;
+        return nextNode;
+    }
+    private static Node setRandom(Node orgNode) {
+        if ((orgNode      == null)
+         || (orgNode.next == null))
+            return null;
+        
+        Node nextLink = orgNode.next.next;
+        if (orgNode.random != null) 
+            orgNode.next.random = orgNode.random.next;
+        
         return nextLink;
     }
-    private static Link setRandom(Link orgLink) {
-        if ((orgLink      == null)
-         || (orgLink.next == null))
+    private static Node unzip(Node orgNode) {
+        if (orgNode == null)
+            return null;
+        if (orgNode.next == null)
             return null;
         
-        Link nextLink = orgLink.next.next;
-        if (orgLink.random != null) 
-            orgLink.next.random = orgLink.random.next;
-        
-        return nextLink;
-    }
-    private static Link splitLink(Link orgLink) {
-        if (orgLink == null)
-            return null;
-        if (orgLink.next == null)
-            return null;
-        
-        Link next = orgLink.next.next;
+        Node next = orgNode.next.next;
         if (next != null)
-            orgLink.next.next = next.next;
-        orgLink.next = next;
+            orgNode.next.next = next.next;
+        
+        orgNode.next = next;
         
         return next;
     }
     
-    static Link cloneLink(Link orgLink) {
-        orgLink.traverse(link -> insertClone(link));
-        orgLink.traverse(link -> setRandom  (link));
+    static Node cloneList(Node orgHead) {
+        orgHead.traverse(node -> insertClone(node));
+        Node newHead = orgHead.next;
         
-        Link newLink = orgLink.next;
-        orgLink.traverse(link -> splitLink  (link));
-        return newLink;
+        orgHead.traverse(node -> setRandom(node));
+        orgHead.traverse(node -> unzip    (node));
+        return newHead;
     }
     
-    static Link create() {
-        Link link1 = new Link("1");
-        Link link2 = new Link("2");
-        Link link3 = new Link("3");
-        Link link4 = new Link("4");
-        Link link5 = new Link("5");
+    static Node create() {
+        Node node1 = new Node("1");
+        Node node2 = new Node("2");
+        Node node3 = new Node("3");
+        Node node4 = new Node("4");
+        Node node5 = new Node("5");
         
-        Link orgLink = link1;
-        link1.next = link2;
-        link2.next = link3;
-        link3.next = link4;
-        link4.next = link5;
+        Node orgNode = node1;
+        node1.next = node2;
+        node2.next = node3;
+        node3.next = node4;
+        node4.next = node5;
         
-        orgLink.random                     = orgLink.next.next;
-        orgLink.next.random                = orgLink;
-        orgLink.next.next.random           = orgLink.next.next.next.next;
-        orgLink.next.next.next.random      = orgLink.next.next;
-        orgLink.next.next.next.next.random = orgLink.next;
-        return orgLink;
+        orgNode.random                     = orgNode.next.next;
+        orgNode.next.random                = orgNode;
+        orgNode.next.next.random           = orgNode.next.next.next.next;
+        orgNode.next.next.next.random      = orgNode.next.next;
+        orgNode.next.next.next.next.random = orgNode.next;
+        return orgNode;
     }
     
     public static void main(String[] args) {
-        Link orgLink = create();
+        Node orgLink = create();
         
         System.out.println(orgLink);
         
-        Link newLink = cloneLink(orgLink);
+        Node newLink = cloneList(orgLink);
         System.out.println(newLink);
     }
     
